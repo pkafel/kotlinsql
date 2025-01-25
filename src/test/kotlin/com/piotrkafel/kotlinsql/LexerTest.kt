@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 
 class LexerTest {
 
-    private val cursor = Cursor(0u, Location(0u, 0u))
+    private val cursor = Cursor(0u, Location(0u))
 
     @ParameterizedTest
     @MethodSource("keywordsTestData")
@@ -15,7 +15,7 @@ class LexerTest {
         val result = KeywordLexer().lex(input, cursor)
 
         assertEquals(expectedResult, result)
-        assertEquals(Cursor(0u, Location(0u, 0u)), cursor)
+        assertEquals(Cursor(0u, Location(0u)), cursor)
     }
 
     @ParameterizedTest
@@ -24,7 +24,7 @@ class LexerTest {
         val result = StringLexer().lex(input, cursor)
 
         assertEquals(expectedResult, result)
-        assertEquals(Cursor(0u, Location(0u, 0u)), cursor)
+        assertEquals(Cursor(0u, Location(0u)), cursor)
     }
 
 
@@ -88,11 +88,10 @@ class LexerTest {
         fun keywordsTestData() = listOf(
             arrayOf(
                 "select", LexerResult.Success(
-                    token = Token(value = "select", kind = TokenKind.KEYWORD, loc = Location(line = 0u, col = 0u)),
+                    token = Token(value = "select", kind = TokenKind.KEYWORD, loc = Location(col = 0u)),
                     cursor = Cursor(
                         pointer = 6u,
                         loc = Location(
-                            line = 0u,
                             col = 6u
                         )
                     )
@@ -100,28 +99,26 @@ class LexerTest {
             ),
             arrayOf(
                 "FROM", LexerResult.Success(
-                    token = Token(value = "from", kind = TokenKind.KEYWORD, loc = Location(line = 0u, col = 0u)),
+                    token = Token(value = "from", kind = TokenKind.KEYWORD, loc = Location(col = 0u)),
                     cursor = Cursor(
                         pointer = 4u,
                         loc = Location(
-                            line = 0u,
                             col = 4u
                         )
                     )
                 )
             ),
-            arrayOf("Shenanigans", LexerResult.Failure(Cursor(pointer = 0u, loc = Location(line = 0u, col = 0u))))
+            arrayOf("Shenanigans", LexerResult.Failure(Cursor(pointer = 0u, loc = Location(col = 0u))))
 //            arrayOf("INTROVERT", LexerResult.Failure),   how to handle this?
         )
 
         @JvmStatic
         fun stringLiteralsTestData() = listOf(
             arrayOf("'hello world'", LexerResult.Success(
-                token = Token(value = "hello world", kind = TokenKind.STRING, loc = Location(line = 0u, col = 0u)),
+                token = Token(value = "hello world", kind = TokenKind.STRING, loc = Location(col = 0u)),
                 cursor = Cursor(
                     pointer = 13u,
                     loc = Location(
-                        line = 0u,
                         col = 13u
                     )
                 )

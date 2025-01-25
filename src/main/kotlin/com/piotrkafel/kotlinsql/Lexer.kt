@@ -3,7 +3,6 @@ package com.piotrkafel.kotlinsql
 import com.piotrkafel.kotlinsql.LexerResult.Success
 
 data class Location(
-    val line: UInt,
     val col: UInt
 )
 
@@ -65,7 +64,7 @@ class SqlLexer {
     private val lexers = arrayOf(KeywordLexer(), StringLexer(), SymbolLexer())
 
     fun lex(input: String): List<Token> {
-        var cursor = Cursor(0u, Location(0u, 0u))
+        var cursor = Cursor(0u, Location(0u))
         val result = mutableListOf<Token>()
 
         while(cursor.pointer < input.length.toUInt()) {
@@ -103,14 +102,12 @@ class KeywordLexer: Lexer {
                 value = match,
                 kind = TokenKind.KEYWORD,
                 loc = Location(
-                    line = cursor.loc.line,
                     col = cursor.loc.col,
                 )
             ),
             cursor = cursor.copy(
                 pointer = cursor.pointer + match.length.toUInt(),
                 loc = Location(
-                    line = cursor.loc.line,
                     col = cursor.loc.col + match.length.toUInt()
                 )
             )
@@ -176,7 +173,7 @@ class StringLexer: Lexer {
                         Token(
                             value = value.toString(),
                             kind = TokenKind.STRING,
-                            loc = cursor.loc.copy(col = cursor.loc.col, line = cursor.loc.line)
+                            loc = cursor.loc.copy(col = cursor.loc.col)
                         ),
                         cursor = cursor.copy(
                             pointer = movingPointer.toUInt(),

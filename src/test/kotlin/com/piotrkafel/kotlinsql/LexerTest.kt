@@ -27,7 +27,14 @@ class LexerTest {
         assertEquals(Cursor(0u, Location(0u)), cursor)
     }
 
+    @ParameterizedTest
+    @MethodSource("symbolsTestData")
+    fun testSymbols(input: String, expectedResult: LexerResult) {
+        val result = SymbolLexer().lex(input, cursor)
 
+        assertEquals(expectedResult, result)
+        assertEquals(Cursor(0u, Location(0u)), cursor)
+    }
 
 //    @Test
 //    fun testSymbols() {
@@ -120,6 +127,71 @@ class LexerTest {
                     pointer = 13u,
                     loc = Location(
                         col = 13u
+                    )
+                )
+            ))
+        )
+
+        @JvmStatic
+        fun symbolsTestData() = listOf(
+            arrayOf("(", LexerResult.Success(
+                token = Token(value = "(", kind = TokenKind.SYMBOL, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 1u,
+                    loc = Location(
+                        col = 1u
+                    )
+                )
+            )),
+            arrayOf(")", LexerResult.Success(
+                token = Token(value = ")", kind = TokenKind.SYMBOL, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 1u,
+                    loc = Location(
+                        col = 1u
+                    )
+                )
+            )),
+            arrayOf("*", LexerResult.Success(
+                token = Token(value = "*", kind = TokenKind.SYMBOL, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 1u,
+                    loc = Location(
+                        col = 1u
+                    )
+                )
+            )),
+            arrayOf(",", LexerResult.Success(
+                token = Token(value = ",", kind = TokenKind.SYMBOL, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 1u,
+                    loc = Location(
+                        col = 1u
+                    )
+                )
+            )),
+            arrayOf(";", LexerResult.Success(
+                token = Token(value = ";", kind = TokenKind.SYMBOL, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 1u,
+                    loc = Location(
+                        col = 1u
+                    )
+                )
+            )),
+            arrayOf(" ", LexerResult.Failure(
+                cursor = Cursor(
+                    pointer = 1u,
+                    loc = Location(
+                        col = 1u
+                    )
+                )
+            )),
+            arrayOf("\t", LexerResult.Failure(
+                cursor = Cursor(
+                    pointer = 1u,
+                    loc = Location(
+                        col = 1u
                     )
                 )
             ))

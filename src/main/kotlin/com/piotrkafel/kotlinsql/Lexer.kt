@@ -1,6 +1,8 @@
 package com.piotrkafel.kotlinsql
 
+import com.piotrkafel.kotlinsql.LexerResult.Failure
 import com.piotrkafel.kotlinsql.LexerResult.Success
+import java.lang.RuntimeException
 
 data class Location(
     val col: UInt
@@ -39,11 +41,7 @@ data class Token(
     val value: String,
     val kind: TokenKind,
     val loc: Location
-) {
-    fun equals(other: Token): Boolean {
-        return value == other.value && kind == other.kind
-    }
-}
+)
 
 data class Cursor(
     val pointer: UInt,
@@ -77,10 +75,14 @@ class SqlLexer {
                     cursor = lexingResult.cursor
                     movedPointer = true
                 }
+
+                if(lexingResult is Failure && lexingResult.cursor != cursor) {
+                    movedPointer = true
+                }
             }
 
             if(!movedPointer) {
-                // TODO handle cases when no lexer could move the pointer
+                throw RuntimeException("Could not process input. Problem at ${cursor.pointer} position")
             }
         }
 
@@ -95,7 +97,7 @@ class KeywordLexer: Lexer {
     override fun lex(input: String, cursor: Cursor): LexerResult {
         val match = longestMatching(input, cursor)
 
-        if(match == "") return LexerResult.Failure(cursor)
+        if(match == "") return Failure(cursor)
 
         return Success(
             token = Token(
@@ -150,12 +152,12 @@ class StringLexer: Lexer {
     override fun lex(input: String, cursor: Cursor): LexerResult {
         // Check if there's nothing left to parse
         if (cursor.pointer.toInt() >= input.length) {
-            return LexerResult.Failure(cursor)
+            return Failure(cursor)
         }
 
         // Check if the current char is start of a string
         if(input[cursor.pointer.toInt()] != delimiter) {
-            return LexerResult.Failure(cursor)
+            return Failure(cursor)
         }
 
         val value = StringBuilder()
@@ -192,14 +194,42 @@ class StringLexer: Lexer {
             }
         }
 
-        return LexerResult.Failure(cursor)
+        return Failure(cursor)
     }
 }
 
 class SymbolLexer: Lexer {
 
+    private val symbols = Symbol.entries.associateBy { it.value.first() }
+
     override fun lex(input: String, cursor: Cursor): LexerResult {
         val currentChar = input[cursor.pointer.toInt()]
-        return LexerResult.Failure(cursor)
+
+        // whitespaces could be handled in a separate lexer
+        // for now they can stay here, and we will recognize them based on moved cursor
+        if(currentChar == ' ' || currentChar == '\t') {
+            return Failure(
+                Cursor(
+                    pointer = cursor.pointer + 1u,
+                    loc = Location(cursor.pointer + 1u)
+                )
+            )
+        }
+
+        if(symbols.contains(currentChar)) {
+            return Success(
+                token =  Token(
+                    value = currentChar.toString(),
+                    kind = TokenKind.SYMBOL,
+                    loc = Location(col = cursor.pointer)
+                ),
+                cursor = Cursor(
+                    pointer = cursor.pointer + 1u,
+                    loc = Location(col = cursor.pointer + 1u)
+                )
+            )
+        }
+
+        return Failure(cursor)
     }
 }

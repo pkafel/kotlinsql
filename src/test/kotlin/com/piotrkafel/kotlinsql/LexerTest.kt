@@ -10,6 +10,14 @@ class LexerTest {
     private val cursor = Cursor(0u, Location(0u))
 
     @ParameterizedTest
+    @MethodSource("sqlTestData")
+    fun testSqlLexer(input: String, expectedResult: List<Token>) {
+        val result = SqlLexer().lex(input)
+
+        assertEquals(expectedResult, result)
+    }
+
+    @ParameterizedTest
     @MethodSource("keywordsTestData")
     fun testBasicKeywords(input: String, expectedResult: LexerResult) {
         val result = KeywordLexer().lex(input, cursor)
@@ -74,6 +82,68 @@ class LexerTest {
 //    }
 
     companion object {
+
+        @JvmStatic
+        fun sqlTestData() = listOf(
+            arrayOf("select * from myTable", listOf(
+                Token(
+                    value = "select",
+                    kind = TokenKind.KEYWORD,
+                    loc = Location(col = 0u)),
+                Token(
+                    value = "*",
+                    kind = TokenKind.SYMBOL,
+                    loc = Location(col = 7u)
+                ),
+                Token(
+                    value = "from",
+                    kind = TokenKind.KEYWORD,
+                    loc = Location(col = 9u)
+                ),
+                Token(
+                    value = "myTable",
+                    kind = TokenKind.IDENTIFIER,
+                    loc = Location(col = 14u)
+                )
+            )),
+            arrayOf("INSERT into myTable VaLuEs ('what a value')", listOf(
+                Token(
+                    value = "insert",
+                    kind = TokenKind.KEYWORD,
+                    loc = Location(col = 0u)
+                ),
+                Token(
+                    value = "into",
+                    kind = TokenKind.KEYWORD,
+                    loc = Location(col = 7u)
+                ),
+                Token(
+                    value = "myTable",
+                    kind = TokenKind.IDENTIFIER,
+                    loc = Location(col = 12u)
+                ),
+                Token(
+                    value = "values",
+                    kind = TokenKind.KEYWORD,
+                    loc = Location(col = 20u)
+                ),
+                Token(
+                    value = "(",
+                    kind = TokenKind.SYMBOL,
+                    loc = Location(col = 27u)
+                ),
+                Token(
+                    value = "what a value",
+                    kind = TokenKind.STRING,
+                    loc = Location(col = 28u)
+                ),
+                Token(
+                    value = ")",
+                    kind = TokenKind.SYMBOL,
+                    loc = Location(col = 42u)
+                )
+            ))
+        )
 
         @JvmStatic
         fun identifiersTestData() = listOf(

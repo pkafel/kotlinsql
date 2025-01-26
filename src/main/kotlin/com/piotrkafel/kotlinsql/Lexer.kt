@@ -48,9 +48,9 @@ data class Cursor(
     val loc: Location
 )
 
-sealed class LexerResult(cursor: Cursor) {
-    data class Success(val token: Token, val cursor: Cursor): LexerResult(cursor)
-    data class Failure(val cursor: Cursor) : LexerResult(cursor)
+sealed class LexerResult() {
+    data class Success(val token: Token, val cursor: Cursor): LexerResult()
+    data class Failure(val cursor: Cursor) : LexerResult()
 }
 
 interface Lexer {
@@ -59,7 +59,8 @@ interface Lexer {
 
 class SqlLexer {
 
-    private val lexers = arrayOf(KeywordLexer(), StringLexer(), SymbolLexer())
+    // order of lexers matter - for example keyword lexer needs to be before identifier lexer
+    private val lexers = arrayOf(KeywordLexer(), SymbolLexer(), StringLexer(), NumericLexer(), IdentifierLexer())
 
     fun lex(input: String): List<Token> {
         var cursor = Cursor(0u, Location(0u))
@@ -74,10 +75,13 @@ class SqlLexer {
                     result.add(lexingResult.token)
                     cursor = lexingResult.cursor
                     movedPointer = true
+                    break
                 }
 
                 if(lexingResult is Failure && lexingResult.cursor != cursor) {
                     movedPointer = true
+                    cursor = lexingResult.cursor
+                    break
                 }
             }
 

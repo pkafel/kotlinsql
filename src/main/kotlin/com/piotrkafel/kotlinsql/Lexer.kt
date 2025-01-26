@@ -94,6 +94,9 @@ class SqlLexer {
     }
 }
 
+/**
+ * Any input that matches in lowercase Keyword enum.
+ */
 class KeywordLexer: Lexer {
 
     private val keywords = Keyword.entries.map { it.value.lowercase() }
@@ -149,6 +152,9 @@ class KeywordLexer: Lexer {
     }
 }
 
+/**
+ * Any input wrapped between two single quotes is considered string.
+ */
 class StringLexer: Lexer {
 
     private val delimiter =  '\''
@@ -202,6 +208,9 @@ class StringLexer: Lexer {
     }
 }
 
+/**
+ * Any input that matches in Symbol enum.
+ */
 class SymbolLexer: Lexer {
 
     private val symbols = Symbol.entries.associateBy { it.value.first() }
@@ -238,6 +247,22 @@ class SymbolLexer: Lexer {
     }
 }
 
+/**
+ * A valid numeric input must follow these rules:
+ * 1. It may start with an optional '-' (negative sign).
+ * 2. It can begin with a digit or a '.' (decimal point).
+ * 3. If it starts with a '.', it must be followed by at least one digit.
+ * 4. Digits may optionally be followed by a single '.' (decimal point) for floating-point numbers.
+ * 5. The decimal point can only appear once in the numeric sequence.
+ * 6. No additional characters (e.g., letters or symbols) are allowed in the numeric sequence.
+ *
+ * Examples of valid inputs:
+ * - "123"
+ * - "-456"
+ * - "78.90"
+ * - "-0.123"
+ * - ".123"
+ */
 class NumericLexer: Lexer {
 
     override fun lex(input: String, cursor: Cursor): LexerResult {
@@ -246,7 +271,7 @@ class NumericLexer: Lexer {
         var result = ""
         val firstChar = input[movingPointer.toInt()]
 
-        if(firstChar.isDigit() || firstChar == '-'){
+        if(firstChar == '-'){
             result += firstChar
             movingPointer++
         }
@@ -279,10 +304,12 @@ class NumericLexer: Lexer {
             ),
             cursor = Cursor(movingPointer, loc = Location(col = movingPointer))
         )
-
     }
 }
 
+/**
+ * By identifier, we understand anything that starts with letter and thats followed by letters, numbers or _.
+ */
 class IdentifierLexer: Lexer {
 
     override fun lex(input: String, cursor: Cursor): LexerResult {

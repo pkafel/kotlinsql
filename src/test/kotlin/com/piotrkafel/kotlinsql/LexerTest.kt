@@ -36,41 +36,25 @@ class LexerTest {
         assertEquals(Cursor(0u, Location(0u)), cursor)
     }
 
-//    @Test
-//    fun testSymbols() {
-//        val input = "(*),;"
-//        val expectedTokens = listOf(
-//            Token("(", TokenKind.SYMBOL, Location(1u, 1u)),
-//            Token("*", TokenKind.SYMBOL, Location(1u, 2u)),
-//            Token(")", TokenKind.SYMBOL, Location(1u, 3u)),
-//            Token(",", TokenKind.SYMBOL, Location(1u, 4u)),
-//            Token(";", TokenKind.SYMBOL, Location(1u, 5u))
-//        )
-//        testLexerInput(input, expectedTokens)
-//    }
-//
-//    @Test
-//    fun testIdentifiers() {
-//        val input = "my_table column1 column2"
-//        val expectedTokens = listOf(
-//            Token("my_table", TokenKind.IDENTIFIER, Location(1u, 1u)),
-//            Token("column1", TokenKind.IDENTIFIER, Location(1u, 10u)),
-//            Token("column2", TokenKind.IDENTIFIER, Location(1u, 18u))
-//        )
-//        testLexerInput(input, expectedTokens)
-//    }
-//
-//
-//    @Test
-//    fun testNumericLiterals() {
-//        val input = "123 456.78"
-//        val expectedTokens = listOf(
-//            Token("123", TokenKind.NUMERIC, Location(1u, 1u)),
-//            Token("456.78", TokenKind.NUMERIC, Location(1u, 5u))
-//        )
-//        testLexerInput(input, expectedTokens)
-//    }
-//
+    @ParameterizedTest
+    @MethodSource("identifiersTestData")
+    fun testIdentifiers(input: String, expectedResult: LexerResult) {
+        val result = IdentifierLexer().lex(input, cursor)
+
+        assertEquals(expectedResult, result)
+        assertEquals(Cursor(0u, Location(0u)), cursor)
+    }
+
+
+    @ParameterizedTest
+    @MethodSource("numericsTestData")
+    fun testNumericLiterals(input: String, expectedResult: LexerResult) {
+        val result = NumericLexer().lex(input, cursor)
+
+        assertEquals(expectedResult, result)
+        assertEquals(Cursor(0u, Location(0u)), cursor)
+    }
+
 //    @Test
 //    fun testMixedInput() {
 //        val input = "insert into my_table values (1, 'test');"
@@ -90,6 +74,106 @@ class LexerTest {
 //    }
 
     companion object {
+
+        @JvmStatic
+        fun identifiersTestData() = listOf(
+            arrayOf("myIdentifier", LexerResult.Success(
+                token = Token(value = "myIdentifier", kind = TokenKind.IDENTIFIER, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 12u,
+                    loc = Location(
+                        col = 12u
+                    )
+                )
+            )),
+            arrayOf("my1dent1f1er", LexerResult.Success(
+                token = Token(value = "my1dent1f1er", kind = TokenKind.IDENTIFIER, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 12u,
+                    loc = Location(
+                        col = 12u
+                    )
+                )
+            )),
+            arrayOf("1dent1f1er", LexerResult.Failure(
+                cursor = Cursor(
+                    pointer = 0u,
+                    loc = Location(
+                        col = 0u
+                    )
+                )
+            )),
+        )
+
+        @JvmStatic
+        fun numericsTestData() = listOf(
+            arrayOf(
+                "1234", LexerResult.Success(
+                    token = Token(value = "1234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                    cursor = Cursor(
+                        pointer = 4u,
+                        loc = Location(
+                            col = 4u
+                        )
+                    )
+                )
+            ),
+            arrayOf(
+                "-1234", LexerResult.Success(
+                    token = Token(value = "-1234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                    cursor = Cursor(
+                        pointer = 5u,
+                        loc = Location(
+                            col = 5u
+                        )
+                    )
+                )
+            ),
+            arrayOf("1.234", LexerResult.Success(
+                token = Token(value = "1.234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 5u,
+                    loc = Location(
+                        col = 5u
+                    )
+                )
+            )),
+            arrayOf("-1.234", LexerResult.Success(
+                token = Token(value = "-1.234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 6u,
+                    loc = Location(
+                        col = 6u
+                    )
+                )
+            )),
+            arrayOf(".234", LexerResult.Success(
+                token = Token(value = ".234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 4u,
+                    loc = Location(
+                        col = 4u
+                    )
+                )
+            )),
+            arrayOf("-.234", LexerResult.Success(
+                token = Token(value = "-.234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 5u,
+                    loc = Location(
+                        col = 5u
+                    )
+                )
+            )),
+            arrayOf("-.23.4", LexerResult.Failure(
+                cursor = Cursor(
+                    pointer = 0u,
+                    loc = Location(
+                        col = 0u
+                    )
+                )
+            )),
+        )
 
         @JvmStatic
         fun keywordsTestData() = listOf(

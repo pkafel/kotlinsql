@@ -233,3 +233,83 @@ class SymbolLexer: Lexer {
         return Failure(cursor)
     }
 }
+
+class NumericLexer: Lexer {
+
+    override fun lex(input: String, cursor: Cursor): LexerResult {
+        var movingPointer = cursor.pointer
+
+        var result = ""
+        val firstChar = input[movingPointer.toInt()]
+
+        if(firstChar.isDigit() || firstChar == '-'){
+            result += firstChar
+            movingPointer++
+        }
+
+        var foundPointer = false
+        while (movingPointer < input.length.toUInt()) {
+            val currentChar = input[movingPointer.toInt()]
+
+            if(currentChar.isDigit()) {
+                result += currentChar
+                movingPointer++
+                continue
+            } else if(currentChar == '.') {
+                if(foundPointer) return Failure(cursor)
+                foundPointer = true
+                result += currentChar
+                movingPointer++
+                continue
+            } else {
+                break
+            }
+        }
+        val doubleResult = result.toDoubleOrNull()
+        return if(doubleResult == null) Failure(cursor)
+        else Success(
+            token = Token(
+                value = result,
+                kind = TokenKind.NUMERIC,
+                loc = Location(col = cursor.pointer)
+            ),
+            cursor = Cursor(movingPointer, loc = Location(col = movingPointer))
+        )
+
+    }
+}
+
+class IdentifierLexer: Lexer {
+
+    override fun lex(input: String, cursor: Cursor): LexerResult {
+        val firstChar = input[cursor.pointer.toInt()]
+
+        if(!firstChar.isLetter()) return Failure(cursor)
+
+        var result = "" + firstChar
+        var movingPointer = cursor.pointer + 1u
+
+        while(movingPointer < input.length.toUInt()) {
+            val currentChar = input[movingPointer.toInt()]
+
+            if(currentChar.isLetterOrDigit()) {
+                result += currentChar
+                movingPointer++
+            } else {
+                break
+            }
+        }
+
+        return Success(
+            token = Token(
+                value = result,
+                kind = TokenKind.IDENTIFIER,
+                loc = Location(cursor.pointer)
+            ),
+            cursor = Cursor(
+                pointer = movingPointer,
+                loc = Location(col = movingPointer)
+            )
+        )
+    }
+}

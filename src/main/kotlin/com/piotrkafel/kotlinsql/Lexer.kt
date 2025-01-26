@@ -296,7 +296,7 @@ class IdentifierLexer: Lexer {
         while(movingPointer < input.length.toUInt()) {
             val currentChar = input[movingPointer.toInt()]
 
-            if(currentChar.isLetterOrDigit()) {
+            if(currentChar.isLetterOrDigit() || currentChar == '_') {
                 result += currentChar
                 movingPointer++
             } else {

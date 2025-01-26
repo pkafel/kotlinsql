@@ -173,6 +173,15 @@ class LexerTest {
                     )
                 )
             )),
+            arrayOf("my_identifier", LexerResult.Success(
+                token = Token(value = "my_identifier", kind = TokenKind.IDENTIFIER, loc = Location(col = 0u)),
+                cursor = Cursor(
+                    pointer = 13u,
+                    loc = Location(
+                        col = 13u
+                    )
+                )
+            )),
         )
 
         @JvmStatic
@@ -270,7 +279,6 @@ class LexerTest {
                 )
             ),
             arrayOf("Shenanigans", LexerResult.Failure(Cursor(pointer = 0u, loc = Location(col = 0u))))
-//            arrayOf("INTROVERT", LexerResult.Failure),   how to handle this?
         )
 
         @JvmStatic

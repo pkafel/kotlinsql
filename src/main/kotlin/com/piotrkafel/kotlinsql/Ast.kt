@@ -16,7 +16,6 @@ sealed interface Statement {
         val columns: List<String>,
         val tableName: String
     ) : Statement
-
 }
 
 data class ColumnDefinition(

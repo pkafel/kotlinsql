@@ -28,13 +28,6 @@ class Parser(private val sqlLexer: SqlLexer) {
         return result
     }
 
-    private fun expectSemicolon(tokens: List<Token>, cursor: Int): Boolean {
-        if(cursor >= tokens.size) return false
-
-        val token = tokens[cursor]
-        return token.kind == TokenKind.SYMBOL && token.value == ";"
-    }
-
     // TODO extract parsers to separate classes so we can iterate over them
     private fun parseStatement(tokens: List<Token>, initialCursor: Int): ParsingResult {
         val selectStatement = parseSelectStatement(tokens, initialCursor)
@@ -55,8 +48,12 @@ class Parser(private val sqlLexer: SqlLexer) {
         return ParsingResult.Failure
     }
 
-    private fun parseSelectStatement(tokens: List<Token>, cursor: Int): ParsingResult {
-        return ParsingResult.Failure
+    private fun parseSelectStatement(tokens: List<Token>, initialCursor: Int): ParsingResult {
+        if(!expectKeyword(tokens, initialCursor, Keyword.SELECT)) return ParsingResult.Failure
+
+        var cursor = initialCursor + 1
+
+        return ParsingResult.Success(statement = Statement.SelectStatement(listOf(), ""), cursor = cursor)
     }
 
     private fun parseInsertStatement(tokens: List<Token>, cursor: Int): ParsingResult {
@@ -65,6 +62,22 @@ class Parser(private val sqlLexer: SqlLexer) {
 
     private fun parseCreateStatement(tokens: List<Token>, cursor: Int): ParsingResult {
         return ParsingResult.Failure
+    }
+
+    private fun expectSemicolon(tokens: List<Token>, cursor: Int): Boolean = expectSymbol(tokens, cursor, Symbol.SEMICOLON)
+
+    private fun expectSymbol(tokens: List<Token>, cursor: Int, expectedSymbol: Symbol): Boolean {
+        if(cursor >= tokens.size) return false
+
+        val token = tokens[cursor]
+        return token.kind == TokenKind.SYMBOL && Symbol.valueOf(token.value) == expectedSymbol
+    }
+
+    private fun expectKeyword(tokens: List<Token>, cursor: Int, expectedKeyword: Keyword): Boolean {
+        if(cursor >= tokens.size) return false
+
+        val token = tokens[cursor]
+        return token.kind == TokenKind.SYMBOL && Keyword.valueOf(token.value) == expectedKeyword
     }
 
     sealed class ParsingResult {

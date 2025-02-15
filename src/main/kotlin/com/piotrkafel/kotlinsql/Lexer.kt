@@ -48,7 +48,7 @@ data class Cursor(
     val loc: Location
 )
 
-sealed class LexerResult() {
+sealed class LexerResult {
     data class Success(val token: Token, val cursor: Cursor): LexerResult()
     data class Failure(val cursor: Cursor) : LexerResult()
 }

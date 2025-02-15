@@ -52,8 +52,36 @@ class Parser(private val sqlLexer: SqlLexer) {
         if(!expectKeyword(tokens, initialCursor, Keyword.SELECT)) return ParsingResult.Failure
 
         var cursor = initialCursor + 1
+        val columns = mutableListOf<Literal>()
 
-        return ParsingResult.Success(statement = Statement.SelectStatement(listOf(), ""), cursor = cursor)
+        while(cursor < tokens.size) {
+            val currentToken = tokens[cursor]
+            when (currentToken.kind) {
+                TokenKind.IDENTIFIER -> columns.add(Literal.IdentifierLiteral(currentToken.value))
+                TokenKind.STRING -> columns.add(Literal.StringLiteral(currentToken.value))
+                TokenKind.NUMERIC -> columns.add(Literal.IntLiteral(currentToken.value.toInt()))
+                else -> {
+                    println("Expected identifier, string or numeric inside SELECT statement")
+                    return ParsingResult.Failure
+                }
+            }
+
+            cursor++
+            if(!expectSymbol(tokens, cursor, Symbol.COMMA)) break
+            cursor++
+        }
+
+        if(!expectKeyword(tokens, cursor, Keyword.FROM)) return ParsingResult.Failure
+        cursor++
+
+        if(!expectIdentifier(tokens, cursor)) return ParsingResult.Failure
+        val tableName = tokens[cursor].value
+        cursor++
+
+        return ParsingResult.Success(
+            statement = Statement.SelectStatement(columns = columns, tableName = tableName),
+            cursor = cursor
+        )
     }
 
     private fun parseInsertStatement(tokens: List<Token>, cursor: Int): ParsingResult {
@@ -70,14 +98,21 @@ class Parser(private val sqlLexer: SqlLexer) {
         if(cursor >= tokens.size) return false
 
         val token = tokens[cursor]
-        return token.kind == TokenKind.SYMBOL && Symbol.valueOf(token.value) == expectedSymbol
+        return token.kind == TokenKind.SYMBOL && token.value == expectedSymbol.value
     }
 
     private fun expectKeyword(tokens: List<Token>, cursor: Int, expectedKeyword: Keyword): Boolean {
         if(cursor >= tokens.size) return false
 
         val token = tokens[cursor]
-        return token.kind == TokenKind.SYMBOL && Keyword.valueOf(token.value) == expectedKeyword
+        return token.kind == TokenKind.KEYWORD && Keyword.valueOf(token.value.uppercase()) == expectedKeyword
+    }
+
+    private fun expectIdentifier(tokens: List<Token>, cursor: Int): Boolean {
+        if(cursor >= tokens.size) return false
+
+        val token = tokens[cursor]
+        return token.kind == TokenKind.IDENTIFIER
     }
 
     sealed class ParsingResult {

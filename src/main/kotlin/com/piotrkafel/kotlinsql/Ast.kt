@@ -13,7 +13,7 @@ sealed interface Statement {
     ) : Statement
 
     data class SelectStatement(
-        val columns: List<String>,
+        val columns: List<Literal>,
         val tableName: String
     ) : Statement
 }
@@ -32,4 +32,6 @@ sealed interface Literal {
     data class IntLiteral(val value: Int) : Literal
 
     data class StringLiteral(val value: String) : Literal
+
+    data class IdentifierLiteral(val name: String): Literal
 }

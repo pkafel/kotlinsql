@@ -63,24 +63,6 @@ class LexerTest {
         assertEquals(Cursor(0u, Location(0u)), cursor)
     }
 
-//    @Test
-//    fun testMixedInput() {
-//        val input = "insert into my_table values (1, 'test');"
-//        val expectedTokens = listOf(
-//            Token("insert", TokenKind.KEYWORD, Location(1u, 1u)),
-//            Token("into", TokenKind.KEYWORD, Location(1u, 8u)),
-//            Token("my_table", TokenKind.IDENTIFIER, Location(1u, 13u)),
-//            Token("values", TokenKind.KEYWORD, Location(1u, 22u)),
-//            Token("(", TokenKind.SYMBOL, Location(1u, 29u)),
-//            Token("1", TokenKind.NUMERIC, Location(1u, 30u)),
-//            Token(",", TokenKind.SYMBOL, Location(1u, 31u)),
-//            Token("test", TokenKind.STRING, Location(1u, 33u)),
-//            Token(")", TokenKind.SYMBOL, Location(1u, 39u)),
-//            Token(";", TokenKind.SYMBOL, Location(1u, 40u))
-//        )
-//        testLexerInput(input, expectedTokens)
-//    }
-
     companion object {
 
         @JvmStatic

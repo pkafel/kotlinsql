@@ -1,23 +1,85 @@
 package com.piotrkafel.kotlinsql
 
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ParserTest {
 
-    @Test
-    fun testParsingSelectQuery() {
+    @ParameterizedTest
+    @MethodSource("sqlSelectParsingTestData", "sqlInsertParsingTestData")
+    fun testParsingSelectQuery(sql: String, expectedResult: List<Statement>) {
         val parser = Parser(SqlLexer())
 
-        val result = parser.parse("SELECT name from users;")
+        val result = parser.parse(sql)
 
         assertTrue(result.isNotEmpty())
-        assertEquals(1, result.size)
+        assertEquals(expectedResult, result)
+    }
 
-        val selectStatement = result[0]
-        assertTrue(selectStatement is Statement.SelectStatement)
-        assertEquals(listOf(Literal.IdentifierLiteral("name")), selectStatement.columns)
-        assertEquals("users", selectStatement.tableName)
+    companion object {
+
+        @JvmStatic
+        fun sqlSelectParsingTestData() = listOf(
+            arrayOf(
+                "SELECT name FROM users;",
+                listOf(
+                    Statement.SelectStatement(
+                        columns = listOf(Literal.IdentifierLiteral("name")),
+                        tableName = "users"
+                    )
+                )
+            ),
+            arrayOf(
+                "SELECT name, age, country FROM users;",
+                listOf(
+                    Statement.SelectStatement(
+                        columns = listOf(
+                            Literal.IdentifierLiteral("name"),
+                            Literal.IdentifierLiteral("age"),
+                            Literal.IdentifierLiteral("country")
+                        ),
+                        tableName = "users"
+                    )
+                )
+            ),
+            arrayOf(
+                "SelECT age frOm users;",
+                listOf(
+                    Statement.SelectStatement(
+                        columns = listOf(
+                            Literal.IdentifierLiteral("age"),
+                        ),
+                        tableName = "users"
+                    )
+                )
+            ),
+            arrayOf(
+                "SELECT 11, 'just a value' FROM example_table;",
+                listOf(
+                    Statement.SelectStatement(
+                        columns = listOf(
+                            Literal.IntLiteral(11),
+                            Literal.StringLiteral("just a value")
+                        ),
+                        tableName = "example_table"
+                    )
+                )
+            ),
+        )
+
+        @JvmStatic
+        fun sqlInsertParsingTestData() = listOf(
+            arrayOf(
+                "INSERT INTO users VALUES ('James Dean', 41);",
+                listOf(
+                    Statement.InsertStatement(
+                        tableName = "users",
+                        values = listOf(Literal.StringLiteral("James Dean"), Literal.IntLiteral(41))
+                    )
+                )
+            )
+        )
     }
 }

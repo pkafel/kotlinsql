@@ -41,7 +41,19 @@ data class Token(
     val value: String,
     val kind: TokenKind,
     val loc: Location
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Token) return false
+        return value == other.value && kind == other.kind
+    }
+
+    override fun hashCode(): Int {
+        var result = value.hashCode()
+        result = 31 * result + kind.hashCode()
+        return result
+    }
+}
 
 data class Cursor(
     val pointer: UInt,

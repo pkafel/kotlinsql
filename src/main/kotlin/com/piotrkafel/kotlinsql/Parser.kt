@@ -123,8 +123,39 @@ class Parser(private val sqlLexer: SqlLexer) {
         )
     }
 
-    private fun parseCreateStatement(tokens: List<Token>, cursor: Int): ParsingStatementResult {
-        return ParsingStatementResult.Failure
+    private fun parseCreateStatement(tokens: List<Token>, initialCursor: Int): ParsingStatementResult {
+        if (!expectKeyword(tokens, initialCursor, Keyword.CREATE)) return ParsingStatementResult.Failure
+        var cursor = initialCursor + 1
+
+        if (!expectKeyword(tokens, cursor, Keyword.TABLE)) return ParsingStatementResult.Failure
+        cursor++
+
+        if (!expectIdentifier(tokens, cursor)) return ParsingStatementResult.Failure
+        val tableName = tokens[cursor].value
+        cursor++
+
+        if (!expectSymbol(tokens, cursor, Symbol.LEFT_PAREN)) return ParsingStatementResult.Failure
+        cursor++
+
+        var columns = emptyList<ColumnDefinition>()
+        when(val columnsParsingResult = parseTableColumns(tokens, cursor)) {
+            is ParsingColumnsDefinition.Failure -> return ParsingStatementResult.Failure
+            is ParsingColumnsDefinition.Success -> {
+                cursor = columnsParsingResult.cursor
+                columns = columnsParsingResult.columns
+
+            }
+        }
+
+        if (!expectSymbol(tokens, cursor, Symbol.RIGHT_PAREN)) return ParsingStatementResult.Failure
+        cursor++
+
+        return ParsingStatementResult.Success(
+            statement = Statement.CreateTableStatement(
+                name = tableName,
+                columns = columns,
+            ), cursor = cursor
+        )
     }
 
     private fun parseComaSeparatedLiterals(
@@ -157,6 +188,45 @@ class Parser(private val sqlLexer: SqlLexer) {
         return ParsingLiteralsResult.Success(literals = result, cursor = cursor)
     }
 
+    private fun parseTableColumns(tokens: List<Token>, initialCursor: Int): ParsingColumnsDefinition {
+        if (initialCursor >= tokens.size) return ParsingColumnsDefinition.Failure("Unexpected end of tokens")
+
+        var cursor = initialCursor
+        val columns = mutableListOf<ColumnDefinition>()
+        while (cursor < tokens.size) {
+            val potentialIdentifierToken = tokens[cursor]
+
+            when (potentialIdentifierToken.kind) {
+                TokenKind.IDENTIFIER -> {
+                    val columnName = potentialIdentifierToken.value
+                    cursor++
+                    if (cursor >= tokens.size) return ParsingColumnsDefinition.Failure("Unexpected end of tokens")
+                    val potentialTypeToken = tokens[cursor]
+
+                    when(potentialTypeToken.kind) {
+                        TokenKind.KEYWORD -> {
+                            when(potentialTypeToken.value) {
+                                Keyword.INT.value -> columns.add(ColumnDefinition(name = columnName, type = ColumnType.INT))
+                                Keyword.TEXT.value -> columns.add(ColumnDefinition(name = columnName, type = ColumnType.TEXT))
+                                else -> ParsingColumnsDefinition.Failure("Expected column type but got ${potentialIdentifierToken.value}")
+                            }
+                        }
+                        else -> return ParsingColumnsDefinition.Failure("Expected column type but got ${potentialIdentifierToken.value}")
+                    }
+
+                }
+                else -> return ParsingColumnsDefinition.Failure("Expected column type but got ${potentialIdentifierToken.value}")
+            }
+            cursor++
+
+            if (expectSymbol(tokens, cursor, Symbol.COMMA)) {
+                cursor++
+            } else break
+        }
+
+        return ParsingColumnsDefinition.Success(columns = columns, cursor = cursor)
+    }
+
     private fun expectSemicolon(tokens: List<Token>, cursor: Int): Boolean =
         expectSymbol(tokens, cursor, Symbol.SEMICOLON)
 
@@ -179,6 +249,11 @@ class Parser(private val sqlLexer: SqlLexer) {
 
         val token = tokens[cursor]
         return token.kind == TokenKind.IDENTIFIER
+    }
+
+    sealed class ParsingColumnsDefinition {
+        class Success(val columns: List<ColumnDefinition>, val cursor: Int) : ParsingColumnsDefinition()
+        class Failure(val errorMessage: String) : ParsingColumnsDefinition()
     }
 
     sealed class ParsingLiteralsResult {

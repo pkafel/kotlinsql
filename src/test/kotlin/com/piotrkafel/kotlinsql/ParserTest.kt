@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 class ParserTest {
 
     @ParameterizedTest
-    @MethodSource("sqlSelectParsingTestData", "sqlInsertParsingTestData")
+    @MethodSource("sqlSelectParsingTestData", "sqlInsertParsingTestData", "sqlCreateTableParsingTestData")
     fun testParsingSelectQuery(sql: String, expectedResult: List<Statement>) {
         val parser = Parser(SqlLexer())
 
@@ -77,6 +77,22 @@ class ParserTest {
                     Statement.InsertStatement(
                         tableName = "users",
                         values = listOf(Literal.StringLiteral("James Dean"), Literal.IntLiteral(41))
+                    )
+                )
+            )
+        )
+
+        @JvmStatic
+        fun sqlCreateTableParsingTestData() = listOf(
+            arrayOf(
+                "CREATE TABLE users (id INT, name TEXT);",
+                listOf(
+                    Statement.CreateTableStatement(
+                        name = "users",
+                        columns = listOf(
+                            ColumnDefinition("id", ColumnType.INT),
+                            ColumnDefinition("name", type = ColumnType.TEXT)
+                        )
                     )
                 )
             )

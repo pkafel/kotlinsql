@@ -3,14 +3,21 @@ package com.piotrkafel.kotlinsql
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class InMemoryEngine(val tables: MutableMap<String, Table> = mutableMapOf()): Engine {
+class InMemoryEngine(private val tables: MutableMap<String, Table> = mutableMapOf()): Engine {
 
     override fun createTable(createTableStatement: Statement.CreateTableStatement): StatementExecutionError? {
-        TODO("Not yet implemented")
+        tables[createTableStatement.name] = Table(columns = createTableStatement.columns, mutableListOf())
+        return null
     }
 
     override fun insertData(insertStatement: Statement.InsertStatement): StatementExecutionError? {
-        TODO("Not yet implemented")
+        if(!tables.containsKey(insertStatement.tableName)) return StatementExecutionError.TableDoesNotExistError
+
+        val table = tables[insertStatement.tableName]
+
+        // TODO implement the insertion part
+
+        return null
     }
 
     override fun selectData(selectStatement: Statement.SelectStatement): QueryResult {

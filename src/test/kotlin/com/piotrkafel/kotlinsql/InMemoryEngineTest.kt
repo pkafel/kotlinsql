@@ -9,7 +9,7 @@ import kotlin.test.fail
 class InMemoryEngineTest {
 
     @Test
-    fun testCreateTable() {
+    fun testStatementsInMemoryEngine() {
         val engine = InMemoryEngine()
 
         val createTableStatement = Statement.CreateTableStatement(

@@ -1,5 +1,8 @@
 package com.piotrkafel.kotlinsql
 
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+
 interface Engine {
 
     fun createTable(createTableStatement: Statement.CreateTableStatement): StatementExecutionError?
@@ -12,29 +15,23 @@ interface Engine {
 sealed class StatementExecutionError {
     data object TableDoesNotExistError : StatementExecutionError()
     data object ColumnDoesNotExistError : StatementExecutionError()
+    data object NumberOfValuesDoesNotMatchNumberOfColumns : StatementExecutionError()
+    data object ValueTypeDoesNotMatchColumnType : StatementExecutionError()
 }
 
 sealed class QueryResult {
-    data class Success(val rows: Array<Array<Cell>>) : QueryResult() {
+    // todo for results we need as well type of the column
+    data class Success(val rows: List<List<Cell>>) : QueryResult()
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Success
-
-            return rows.contentDeepEquals(other.rows)
-        }
-
-        override fun hashCode(): Int {
-            return rows.contentDeepHashCode()
-        }
-    }
-
-    data object Failure : QueryResult()
+    data class Failure(val error: StatementExecutionError) : QueryResult()
 }
 
-interface Cell{
-    fun asText(): String
-    fun asInt(): Int
-}
+typealias Cell = ByteArray
+
+fun Cell.asInt(): Int = ByteBuffer.wrap(this).order(ByteOrder.BIG_ENDIAN).int
+
+fun Cell.asText(): String = String(this)
+
+fun Int.toCell(): Cell = ByteBuffer.allocate(Int.SIZE_BYTES).putInt(this).array()
+
+fun String.toCell(): Cell = this.encodeToByteArray()

@@ -13,6 +13,7 @@ interface Engine {
 }
 
 sealed class StatementExecutionError {
+    data object TableAlreadyExistsError : StatementExecutionError()
     data object TableDoesNotExistError : StatementExecutionError()
     data object ColumnDoesNotExistError : StatementExecutionError()
     data object NumberOfValuesDoesNotMatchNumberOfColumns : StatementExecutionError()
@@ -20,8 +21,19 @@ sealed class StatementExecutionError {
 }
 
 sealed class QueryResult {
-    // todo for results we need as well type of the column
-    data class Success(val rows: List<List<Cell>>) : QueryResult()
+
+    data class Success(private val rows: List<Map<String, Cell>>) : QueryResult() {
+
+        fun getInt(rowNumber: Int, fieldName: String): Int? {
+            return rows[rowNumber][fieldName]!!.asInt()
+        }
+
+        fun getString(rowNumber: Int, fieldName: String): String? {
+            return rows[rowNumber][fieldName]!!.asText()
+        }
+
+        fun getResultSize(): Int = rows.size
+    }
 
     data class Failure(val error: StatementExecutionError) : QueryResult()
 }

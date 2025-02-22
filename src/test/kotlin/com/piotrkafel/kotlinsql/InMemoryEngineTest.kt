@@ -2,9 +2,7 @@ package com.piotrkafel.kotlinsql
 
 
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
-import kotlin.test.fail
+import kotlin.test.*
 
 class InMemoryEngineTest {
 
@@ -27,10 +25,60 @@ class InMemoryEngineTest {
         val queryResult = engine.selectData(selectStatement)
 
         if(queryResult !is QueryResult.Success) fail("Error while running select query")
-        assertEquals(1, queryResult.rows.size)
-        assertEquals(1, queryResult.rows[0].size)
-        assertEquals(13, queryResult.rows[0][0].asInt())
+        assertEquals(1, queryResult.getResultSize())
+        assertEquals(13, queryResult.getInt(0, "age"))
     }
 
+    @Test
+    fun shouldNotAllowToCreateTableWithTheSameNameTwice() {
+        val engine = InMemoryEngine()
 
+        val createTableStatement = Statement.CreateTableStatement(
+            name = "user",
+            columns = listOf(ColumnDefinition(name = "age", type = ColumnType.INT))
+        )
+        val error1 = engine.createTable(createTableStatement)
+
+        assertNull(error1)
+
+        val createTableWithTheSameNameStatement = Statement.CreateTableStatement(
+            name = "user",
+            columns = listOf(ColumnDefinition(name = "name", type = ColumnType.TEXT))
+        )
+        val error2 = engine.createTable(createTableWithTheSameNameStatement)
+
+        assertNotNull(error2)
+        assertTrue(error2 is StatementExecutionError.TableAlreadyExistsError)
+    }
+
+    @Test
+    fun shouldNotAllowInsertingDataIntoNonExistingTable() {
+        val engine = InMemoryEngine()
+
+        val insertStatement = Statement.InsertStatement(tableName = "user", values = listOf(Literal.IntLiteral(13)))
+        val error = engine.insertData(insertStatement)
+
+        assertNotNull(error)
+        assertTrue(error is StatementExecutionError.TableDoesNotExistError)
+    }
+
+    @Test
+    fun shouldNotAllowReadingNonExistingColumns() {
+        val engine = InMemoryEngine()
+
+        val createTableStatement = Statement.CreateTableStatement(
+            name = "user",
+            columns = listOf(ColumnDefinition(name = "age", type = ColumnType.INT))
+        )
+        val error = engine.createTable(createTableStatement)
+
+        assertNull(error)
+
+        val selectStatement = Statement.SelectStatement(
+            tableName = "user", columns = listOf(Literal.IdentifierLiteral("name"))
+        )
+        val queryResult = engine.selectData(selectStatement)
+
+        assertEquals(QueryResult.Failure(StatementExecutionError.ColumnDoesNotExistError), queryResult)
+    }
 }

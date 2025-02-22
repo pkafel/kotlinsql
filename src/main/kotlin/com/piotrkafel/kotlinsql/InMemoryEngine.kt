@@ -3,6 +3,7 @@ package com.piotrkafel.kotlinsql
 class InMemoryEngine(private val tables: MutableMap<String, Table> = mutableMapOf()) : Engine {
 
     override fun createTable(createTableStatement: Statement.CreateTableStatement): StatementExecutionError? {
+        if(tables.contains(createTableStatement.name)) return StatementExecutionError.TableAlreadyExistsError
         tables[createTableStatement.name] = Table(columns = createTableStatement.columns, mutableListOf())
         return null
     }
@@ -37,23 +38,31 @@ class InMemoryEngine(private val tables: MutableMap<String, Table> = mutableMapO
 
         val identifiersColumns = selectStatement.columns
             .filterIsInstance<Literal.IdentifierLiteral>()
-            .associateBy(keySelector = {it.name}, valueTransform = {literal -> table.columns.indexOfFirst { it.name == literal.name }})
+            .associateBy(
+                keySelector = { it.name },
+                valueTransform = { literal -> table.columns.indexOfFirst { it.name == literal.name } }
+            )
 
-        val result = mutableListOf<MutableList<Cell>>()
-        for(rowIndex in table.rows.indices) {
-            val row = table.rows[rowIndex]
-            val rowResult = mutableListOf<Cell>()
-            for(column in selectStatement.columns) {
-                when(column) {
-                    is Literal.IntLiteral -> rowResult.add(column.value.toCell())
-                    is Literal.StringLiteral -> rowResult.add(column.value.toCell())
-                    is Literal.IdentifierLiteral -> rowResult.add(row[identifiersColumns[column.name]!!])
-                }
-            }
-            result.add(rowResult)
+        if (identifiersColumns.values.any { it < 0 }) {
+            return QueryResult.Failure(error = StatementExecutionError.ColumnDoesNotExistError)
         }
 
-        return QueryResult.Success(rows = result)
+        val result = mutableListOf<Map<String, Cell>>()
+        for (rowIndex in table.rows.indices) {
+            val row = table.rows[rowIndex]
+            val rowResult = mutableMapOf<String, Cell>()
+            for (column in selectStatement.columns) {
+                when (column) {
+                    // let's assume here the column name will be the same as the value
+                    is Literal.IntLiteral -> rowResult[column.value.toString()] = column.value.toCell()
+                    is Literal.StringLiteral -> rowResult[column.value] = column.value.toCell()
+                    is Literal.IdentifierLiteral -> rowResult[column.name] = row[identifiersColumns[column.name]!!]
+                }
+            }
+            result.add(rowResult.toMap())
+        }
+
+        return QueryResult.Success(rows = result.toList())
     }
 }
 

@@ -1,6 +1,5 @@
 package com.piotrkafel.kotlinsql
 
-
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -21,10 +20,11 @@ class InMemoryEngineTest {
         val insertStatement = Statement.InsertStatement(tableName = "user", values = listOf(Literal.IntLiteral(13)))
         engine.insertData(insertStatement)
 
-        val selectStatement = Statement.SelectStatement(tableName = "user", columns = listOf(Literal.IdentifierLiteral("age")))
+        val selectStatement =
+            Statement.SelectStatement(tableName = "user", columns = listOf(Literal.IdentifierLiteral("age")))
         val queryResult = engine.selectData(selectStatement)
 
-        if(queryResult !is QueryResult.Success) fail("Error while running select query")
+        if (queryResult !is QueryResult.Success) fail("Error while running select query")
         assertEquals(1, queryResult.getResultSize())
         assertEquals(13, queryResult.getInt(0, "age"))
     }

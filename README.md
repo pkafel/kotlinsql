@@ -4,6 +4,8 @@ A relational database implemented in Kotlin for educational purposes.
 
 This project is inspired by [gosql](https://github.com/eatonphil/gosql), created by [Phil Eaton](https://github.com/eatonphil). Unlike gosql, which aims to reimplement early versions of PostgreSQL, this project simplifies the design to demonstrate how relational databases can be built.
 
+The project is also an answer to author's frustration about lack of JVM based educational content regarding database design.
+
 ## Supported Features
 As an educational tool, Kotlinsql focuses on implementing fundamental features of an SQL database, including:
 * In-Memory Storage: Utilizes in-memory data structures to manage tables, facilitating quick data retrieval and manipulation.

@@ -40,10 +40,10 @@ sealed class QueryResult {
 
 typealias Cell = ByteArray
 
-fun Cell.asInt(): Int = ByteBuffer.wrap(this).order(ByteOrder.BIG_ENDIAN).int
+fun Cell.asInt(): Int = String(this).toInt()
 
 fun Cell.asText(): String = String(this)
 
-fun Int.toCell(): Cell = ByteBuffer.allocate(Int.SIZE_BYTES).putInt(this).array()
+fun Int.toCell(): Cell = this.toString().encodeToByteArray()
 
 fun String.toCell(): Cell = this.encodeToByteArray()

@@ -6,7 +6,7 @@ import kotlin.test.*
 class InMemoryEngineTest {
 
     @Test
-    fun testStatementsInMemoryEngine() {
+    fun shouldReadYourWrites() {
         val engine = InMemoryEngine()
 
         val createTableStatement = Statement.CreateTableStatement(
@@ -80,5 +80,29 @@ class InMemoryEngineTest {
         val queryResult = engine.selectData(selectStatement)
 
         assertEquals(QueryResult.Failure(StatementExecutionError.ColumnDoesNotExistError), queryResult)
+    }
+
+    @Test
+    fun shouldThrowExceptionOnWrongTypeConversion() {
+        val engine = InMemoryEngine()
+
+        val createTableStatement = Statement.CreateTableStatement(
+            name = "user",
+            columns = listOf(ColumnDefinition(name = "name", type = ColumnType.TEXT))
+        )
+        val error = engine.createTable(createTableStatement)
+
+        assertNull(error)
+
+        val insertStatement = Statement.InsertStatement(tableName = "user", values = listOf(Literal.StringLiteral("John")))
+        engine.insertData(insertStatement)
+
+        val selectStatement =
+            Statement.SelectStatement(tableName = "user", columns = listOf(Literal.IdentifierLiteral("name")))
+        val queryResult = engine.selectData(selectStatement)
+
+        if (queryResult !is QueryResult.Success) fail("Error while running select query")
+        assertEquals(1, queryResult.getResultSize())
+        queryResult.getInt(0, "name")
     }
 }

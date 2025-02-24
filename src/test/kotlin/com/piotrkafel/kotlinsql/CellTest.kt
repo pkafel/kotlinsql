@@ -9,7 +9,7 @@ class CellTest {
     @Test
     fun shouldNotAllowConvertingFromStringToRandomInt() {
         try {
-            val cell = "Talking to myself".toCell()
+            val cell = Cell.ofString("Talking to myself")
             cell.asInt()
             fail("Conversion should fail")
         } catch (e: Exception) { }

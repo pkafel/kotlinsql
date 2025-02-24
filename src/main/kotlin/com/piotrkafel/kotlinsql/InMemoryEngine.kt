@@ -22,8 +22,8 @@ class InMemoryEngine(private val tables: MutableMap<String, Table> = mutableMapO
             val columnDefinition = table.columns[index]
 
             when (valueToInsert) {
-                is Literal.IntLiteral -> if (columnDefinition.type == ColumnType.INT) row.add(valueToInsert.value.toCell()) else return StatementExecutionError.ValueTypeDoesNotMatchColumnType
-                is Literal.StringLiteral -> if (columnDefinition.type == ColumnType.TEXT) row.add(valueToInsert.value.toCell()) else return StatementExecutionError.ValueTypeDoesNotMatchColumnType
+                is Literal.IntLiteral -> if (columnDefinition.type == ColumnType.INT) row.add(Cell.ofInt(valueToInsert.value)) else return StatementExecutionError.ValueTypeDoesNotMatchColumnType
+                is Literal.StringLiteral -> if (columnDefinition.type == ColumnType.TEXT) row.add(Cell.ofString(valueToInsert.value)) else return StatementExecutionError.ValueTypeDoesNotMatchColumnType
                 else -> throw IllegalStateException("Unsupported type in INSERT statement")
             }
         }
@@ -54,8 +54,8 @@ class InMemoryEngine(private val tables: MutableMap<String, Table> = mutableMapO
             for (column in selectStatement.columns) {
                 when (column) {
                     // let's assume here the column name will be the same as the value
-                    is Literal.IntLiteral -> rowResult[column.value.toString()] = column.value.toCell()
-                    is Literal.StringLiteral -> rowResult[column.value] = column.value.toCell()
+                    is Literal.IntLiteral -> rowResult[column.value.toString()] = Cell.ofInt(column.value)
+                    is Literal.StringLiteral -> rowResult[column.value] = Cell.ofString(column.value)
                     is Literal.IdentifierLiteral -> rowResult[column.name] = row[identifiersColumns[column.name]!!]
                 }
             }

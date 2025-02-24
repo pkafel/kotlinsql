@@ -38,12 +38,26 @@ sealed class QueryResult {
     data class Failure(val error: StatementExecutionError) : QueryResult()
 }
 
-typealias Cell = ByteArray
+//typealias Cell = ByteArray
 
-fun Cell.asInt(): Int = String(this).toInt()
+class Cell(private val value: ByteArray) {
 
-fun Cell.asText(): String = String(this)
+    fun asInt(): Int = String(value).toInt()
 
-fun Int.toCell(): Cell = this.toString().encodeToByteArray()
+    fun asText(): String = String(value)
 
-fun String.toCell(): Cell = this.encodeToByteArray()
+    companion object {
+
+        fun ofInt(value: Int): Cell = Cell(value.toString().encodeToByteArray())
+
+        fun ofString(value: String): Cell = Cell(value.encodeToByteArray())
+    }
+}
+
+//fun Cell.asInt(): Int = String(this).toInt()
+//
+//fun Cell.asText(): String = String(this)
+
+//fun Int.toCell(): Cell = this.toString().encodeToByteArray()
+//
+//fun String.toCell(): Cell = this.encodeToByteArray()

@@ -1,6 +1,7 @@
 package com.piotrkafel.kotlinsql
 
 import org.junit.jupiter.api.Test
+import java.lang.Exception
 import kotlin.test.*
 
 class InMemoryEngineTest {
@@ -103,6 +104,10 @@ class InMemoryEngineTest {
 
         if (queryResult !is QueryResult.Success) fail("Error while running select query")
         assertEquals(1, queryResult.getResultSize())
-        queryResult.getInt(0, "name")
+
+        try {
+            queryResult.getInt(0, "name")
+            fail("Should throw exception on unsupported conversion")
+        } catch (e: Exception) { }
     }
 }

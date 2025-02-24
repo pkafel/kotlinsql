@@ -14,6 +14,14 @@ As an educational tool, Kotlinsql focuses on implementing fundamental features o
 
 Please note that Kotlinsql is a work in progress. Many core features of relational database are missing. Some of them will be added in the future.
 
+## Missing essential features
+* Support for `null`
+* Support for `DELETE` and `UPDATE` operation
+* Support for `WHERE` clause in `SELECT` query
+* Support for indexes
+* Transactions
+* ACID support
+
 ## Structure
 
 Kotlinsql is structured into several key components that implement core database functionalities:

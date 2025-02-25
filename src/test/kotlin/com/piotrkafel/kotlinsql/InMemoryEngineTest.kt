@@ -1,8 +1,10 @@
 package com.piotrkafel.kotlinsql
 
 import org.junit.jupiter.api.Test
-import java.lang.Exception
-import kotlin.test.*
+import strikt.api.expectCatching
+import strikt.api.expectThat
+import strikt.assertions.*
+import kotlin.test.fail
 
 class InMemoryEngineTest {
 
@@ -16,7 +18,7 @@ class InMemoryEngineTest {
         )
         val error = engine.createTable(createTableStatement)
 
-        assertNull(error)
+        expectThat(error).isNull()
 
         val insertStatement = Statement.InsertStatement(tableName = "user", values = listOf(Literal.IntLiteral(13)))
         engine.insertData(insertStatement)
@@ -25,9 +27,12 @@ class InMemoryEngineTest {
             Statement.SelectStatement(tableName = "user", columns = listOf(Literal.IdentifierLiteral("age")))
         val queryResult = engine.selectData(selectStatement)
 
-        if (queryResult !is QueryResult.Success) fail("Error while running select query")
-        assertEquals(1, queryResult.getResultSize())
-        assertEquals(13, queryResult.getInt(0, "age"))
+        expectThat(queryResult)
+            .isA<QueryResult.Success>()
+            .and {
+                get { getResultSize() }.isEqualTo(1)
+                get { getInt(0, "age") }.isEqualTo(13)
+            }
     }
 
     @Test
@@ -40,7 +45,7 @@ class InMemoryEngineTest {
         )
         val error1 = engine.createTable(createTableStatement)
 
-        assertNull(error1)
+        expectThat(error1).isNull()
 
         val createTableWithTheSameNameStatement = Statement.CreateTableStatement(
             name = "user",
@@ -48,8 +53,9 @@ class InMemoryEngineTest {
         )
         val error2 = engine.createTable(createTableWithTheSameNameStatement)
 
-        assertNotNull(error2)
-        assertTrue(error2 is StatementExecutionError.TableAlreadyExistsError)
+        expectThat(error2).isNotNull().and {
+            get { error2 }.isA<StatementExecutionError.TableAlreadyExistsError>()
+        }
     }
 
     @Test
@@ -59,8 +65,9 @@ class InMemoryEngineTest {
         val insertStatement = Statement.InsertStatement(tableName = "user", values = listOf(Literal.IntLiteral(13)))
         val error = engine.insertData(insertStatement)
 
-        assertNotNull(error)
-        assertTrue(error is StatementExecutionError.TableDoesNotExistError)
+        expectThat(error).isNotNull().and {
+            get { error }.isA<StatementExecutionError.TableDoesNotExistError>()
+        }
     }
 
     @Test
@@ -73,14 +80,14 @@ class InMemoryEngineTest {
         )
         val error = engine.createTable(createTableStatement)
 
-        assertNull(error)
+        expectThat(error).isNull()
 
         val selectStatement = Statement.SelectStatement(
             tableName = "user", columns = listOf(Literal.IdentifierLiteral("name"))
         )
         val queryResult = engine.selectData(selectStatement)
 
-        assertEquals(QueryResult.Failure(StatementExecutionError.ColumnDoesNotExistError), queryResult)
+        expectThat(queryResult).isEqualTo(QueryResult.Failure(StatementExecutionError.ColumnDoesNotExistError))
     }
 
     @Test
@@ -93,7 +100,7 @@ class InMemoryEngineTest {
         )
         val error = engine.createTable(createTableStatement)
 
-        assertNull(error)
+        expectThat(error).isNull()
 
         val insertStatement = Statement.InsertStatement(tableName = "user", values = listOf(Literal.StringLiteral("John")))
         engine.insertData(insertStatement)
@@ -103,11 +110,8 @@ class InMemoryEngineTest {
         val queryResult = engine.selectData(selectStatement)
 
         if (queryResult !is QueryResult.Success) fail("Error while running select query")
-        assertEquals(1, queryResult.getResultSize())
+        expectThat(queryResult.getResultSize()).isEqualTo(1)
 
-        try {
-            queryResult.getInt(0, "name")
-            fail("Should throw exception on unsupported conversion")
-        } catch (e: Exception) { }
+        expectCatching {  queryResult.getInt(0, "name") }.isFailure()
     }
 }

@@ -16,6 +16,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4") // JUnit 5 core
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.4") // Parameterized tests support
+    testImplementation("io.strikt:strikt-core:0.34.0")
 }
 
 tasks.test {

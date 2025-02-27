@@ -61,22 +61,22 @@ data class Cursor(
 )
 
 sealed class LexerResult {
-    data class Success(val token: Token, val cursor: Cursor): LexerResult()
+    data class Success(val tokens: List<Token>, val cursor: Cursor): LexerResult()
     data class Failure(val cursor: Cursor) : LexerResult()
 }
 
 interface Lexer {
-    fun lex(input: String, cursor: Cursor): LexerResult
+    fun lex(input: String, cursor: Cursor = Cursor(pointer = 0u, loc = Location(col = 0u))): LexerResult
 }
 
-class SqlLexer {
+class SqlLexer: Lexer {
 
     // order of lexers matter - for example keyword lexer needs to be before identifier lexer
     private val lexers = arrayOf(KeywordLexer(), SymbolLexer(), StringLexer(), NumericLexer(), IdentifierLexer())
 
-    fun lex(input: String): List<Token> {
-        var cursor = Cursor(0u, Location(0u))
-        val result = mutableListOf<Token>()
+    override fun lex(input: String, initialCursor: Cursor): LexerResult {
+        val tokens = mutableListOf<Token>()
+        var cursor = initialCursor
 
         while(cursor.pointer < input.length.toUInt()) {
             var movedPointer = false
@@ -84,7 +84,7 @@ class SqlLexer {
                 val lexingResult = lexer.lex(input, cursor)
 
                 if(lexingResult is Success) {
-                    result.add(lexingResult.token)
+                    tokens.addAll(lexingResult.tokens)
                     cursor = lexingResult.cursor
                     movedPointer = true
                     break
@@ -102,7 +102,7 @@ class SqlLexer {
             }
         }
 
-        return result
+        return Success(tokens = tokens, cursor = cursor)
     }
 }
 
@@ -119,13 +119,13 @@ class KeywordLexer: Lexer {
         if(match == "") return Failure(cursor)
 
         return Success(
-            token = Token(
+            tokens = listOf(Token(
                 value = match,
                 kind = TokenKind.KEYWORD,
                 loc = Location(
                     col = cursor.loc.col,
                 )
-            ),
+            )),
             cursor = cursor.copy(
                 pointer = cursor.pointer + match.length.toUInt(),
                 loc = Location(
@@ -194,11 +194,11 @@ class StringLexer: Lexer {
                     // increase pointer so it points to next character that we will need to consider
                     movingPointer++
                     return Success(
-                        Token(
+                        listOf(Token(
                             value = value.toString(),
                             kind = TokenKind.STRING,
                             loc = cursor.loc.copy(col = cursor.loc.col)
-                        ),
+                        )),
                         cursor = cursor.copy(
                             pointer = movingPointer.toUInt(),
                             loc = cursor.loc.copy(
@@ -243,11 +243,11 @@ class SymbolLexer: Lexer {
 
         if(symbols.contains(currentChar)) {
             return Success(
-                token =  Token(
+                tokens =  listOf(Token(
                     value = currentChar.toString(),
                     kind = TokenKind.SYMBOL,
                     loc = Location(col = cursor.pointer)
-                ),
+                )),
                 cursor = Cursor(
                     pointer = cursor.pointer + 1u,
                     loc = Location(col = cursor.pointer + 1u)
@@ -309,11 +309,11 @@ class NumericLexer: Lexer {
         val doubleResult = result.toDoubleOrNull()
         return if(doubleResult == null) Failure(cursor)
         else Success(
-            token = Token(
+            tokens = listOf(Token(
                 value = result,
                 kind = TokenKind.NUMERIC,
                 loc = Location(col = cursor.pointer)
-            ),
+            )),
             cursor = Cursor(movingPointer, loc = Location(col = movingPointer))
         )
     }
@@ -344,11 +344,11 @@ class IdentifierLexer: Lexer {
         }
 
         return Success(
-            token = Token(
+            tokens = listOf(Token(
                 value = result,
                 kind = TokenKind.IDENTIFIER,
                 loc = Location(cursor.pointer)
-            ),
+            )),
             cursor = Cursor(
                 pointer = movingPointer,
                 loc = Location(col = movingPointer)

@@ -1,10 +1,12 @@
 package com.piotrkafel.kotlinsql
 
-class Parser(private val sqlLexer: SqlLexer) {
+interface Parser {
+    fun parse(tokens: List<Token>): List<Statement>
+}
 
-    fun parse(input: String): List<Statement> {
-        val tokens = sqlLexer.lex(input)
+class SqlParser: Parser {
 
+    override fun parse(tokens: List<Token>): List<Statement> {
         val result = mutableListOf<Statement>()
         var cursor = 0
         while (cursor < tokens.size) {

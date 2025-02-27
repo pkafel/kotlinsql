@@ -4,18 +4,25 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 class ParserTest {
+
+    private val parser: Parser = SqlParser()
+    private val lexer: Lexer = SqlLexer()
 
     @ParameterizedTest
     @MethodSource("sqlSelectParsingTestData", "sqlInsertParsingTestData", "sqlCreateTableParsingTestData")
     fun testParsingSelectQuery(sql: String, expectedResult: List<Statement>) {
-        val parser = Parser(SqlLexer())
+        val lexingResult = lexer.lex(sql)
 
-        val result = parser.parse(sql)
-
-        assertTrue(result.isNotEmpty())
-        assertEquals(expectedResult, result)
+        if(lexingResult is LexerResult.Success) {
+            val result = parser.parse(lexingResult.tokens)
+            assertTrue(result.isNotEmpty())
+            assertEquals(expectedResult, result)
+        } else {
+            fail("Lexer could not split into tokens the following sql: $sql")
+        }
     }
 
     companion object {

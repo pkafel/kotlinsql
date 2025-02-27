@@ -11,7 +11,7 @@ class LexerTest {
 
     @ParameterizedTest
     @MethodSource("sqlTestData")
-    fun testSqlLexer(input: String, expectedResult: List<Token>) {
+    fun testSqlLexer(input: String, expectedResult: LexerResult) {
         val result = SqlLexer().lex(input)
 
         assertEquals(expectedResult, result)
@@ -68,65 +68,71 @@ class LexerTest {
         @JvmStatic
         fun sqlTestData() = listOf(
             arrayOf(
-                "select * from myTable", listOf(
-                    Token(
-                        value = "select",
-                        kind = TokenKind.KEYWORD,
-                        loc = Location(col = 0u)
+                "select * from myTable", LexerResult.Success(
+                    tokens = listOf(
+                        Token(
+                            value = "select",
+                            kind = TokenKind.KEYWORD,
+                            loc = Location(col = 0u)
+                        ),
+                        Token(
+                            value = "*",
+                            kind = TokenKind.SYMBOL,
+                            loc = Location(col = 7u)
+                        ),
+                        Token(
+                            value = "from",
+                            kind = TokenKind.KEYWORD,
+                            loc = Location(col = 9u)
+                        ),
+                        Token(
+                            value = "myTable",
+                            kind = TokenKind.IDENTIFIER,
+                            loc = Location(col = 14u)
+                        )
                     ),
-                    Token(
-                        value = "*",
-                        kind = TokenKind.SYMBOL,
-                        loc = Location(col = 7u)
-                    ),
-                    Token(
-                        value = "from",
-                        kind = TokenKind.KEYWORD,
-                        loc = Location(col = 9u)
-                    ),
-                    Token(
-                        value = "myTable",
-                        kind = TokenKind.IDENTIFIER,
-                        loc = Location(col = 14u)
-                    )
-                )
-            ),
-            arrayOf(
-                "INSERT into myTable VaLuEs ('what a value')", listOf(
-                    Token(
-                        value = "insert",
-                        kind = TokenKind.KEYWORD,
-                        loc = Location(col = 0u)
-                    ),
-                    Token(
-                        value = "into",
-                        kind = TokenKind.KEYWORD,
-                        loc = Location(col = 7u)
-                    ),
-                    Token(
-                        value = "myTable",
-                        kind = TokenKind.IDENTIFIER,
-                        loc = Location(col = 12u)
-                    ),
-                    Token(
-                        value = "values",
-                        kind = TokenKind.KEYWORD,
-                        loc = Location(col = 20u)
-                    ),
-                    Token(
-                        value = "(",
-                        kind = TokenKind.SYMBOL,
-                        loc = Location(col = 27u)
-                    ),
-                    Token(
-                        value = "what a value",
-                        kind = TokenKind.STRING,
-                        loc = Location(col = 28u)
-                    ),
-                    Token(
-                        value = ")",
-                        kind = TokenKind.SYMBOL,
-                        loc = Location(col = 42u)
+                    cursor = Cursor(pointer = 21u, loc = Location(21u))
+                ),
+                arrayOf(
+                    "INSERT into myTable VaLuEs ('what a value')", LexerResult.Success(
+                        tokens = listOf(
+                            Token(
+                                value = "insert",
+                                kind = TokenKind.KEYWORD,
+                                loc = Location(col = 0u)
+                            ),
+                            Token(
+                                value = "into",
+                                kind = TokenKind.KEYWORD,
+                                loc = Location(col = 7u)
+                            ),
+                            Token(
+                                value = "myTable",
+                                kind = TokenKind.IDENTIFIER,
+                                loc = Location(col = 12u)
+                            ),
+                            Token(
+                                value = "values",
+                                kind = TokenKind.KEYWORD,
+                                loc = Location(col = 20u)
+                            ),
+                            Token(
+                                value = "(",
+                                kind = TokenKind.SYMBOL,
+                                loc = Location(col = 27u)
+                            ),
+                            Token(
+                                value = "what a value",
+                                kind = TokenKind.STRING,
+                                loc = Location(col = 28u)
+                            ),
+                            Token(
+                                value = ")",
+                                kind = TokenKind.SYMBOL,
+                                loc = Location(col = 42u)
+                            )
+                        ),
+                        cursor = Cursor(pointer = 43u, loc = Location(43u))
                     )
                 )
             )
@@ -136,7 +142,7 @@ class LexerTest {
         fun identifiersTestData() = listOf(
             arrayOf(
                 "myIdentifier", LexerResult.Success(
-                    token = Token(value = "myIdentifier", kind = TokenKind.IDENTIFIER, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "myIdentifier", kind = TokenKind.IDENTIFIER, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 12u,
                         loc = Location(
@@ -147,7 +153,7 @@ class LexerTest {
             ),
             arrayOf(
                 "my1dent1f1er", LexerResult.Success(
-                    token = Token(value = "my1dent1f1er", kind = TokenKind.IDENTIFIER, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "my1dent1f1er", kind = TokenKind.IDENTIFIER, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 12u,
                         loc = Location(
@@ -168,7 +174,7 @@ class LexerTest {
             ),
             arrayOf(
                 "my_identifier", LexerResult.Success(
-                    token = Token(value = "my_identifier", kind = TokenKind.IDENTIFIER, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "my_identifier", kind = TokenKind.IDENTIFIER, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 13u,
                         loc = Location(
@@ -183,7 +189,7 @@ class LexerTest {
         fun numericsTestData() = listOf(
             arrayOf(
                 "1234", LexerResult.Success(
-                    token = Token(value = "1234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "1234", kind = TokenKind.NUMERIC, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 4u,
                         loc = Location(
@@ -194,7 +200,7 @@ class LexerTest {
             ),
             arrayOf(
                 "-1234", LexerResult.Success(
-                    token = Token(value = "-1234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "-1234", kind = TokenKind.NUMERIC, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 5u,
                         loc = Location(
@@ -205,7 +211,7 @@ class LexerTest {
             ),
             arrayOf(
                 "1.234", LexerResult.Success(
-                    token = Token(value = "1.234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "1.234", kind = TokenKind.NUMERIC, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 5u,
                         loc = Location(
@@ -216,7 +222,7 @@ class LexerTest {
             ),
             arrayOf(
                 "-1.234", LexerResult.Success(
-                    token = Token(value = "-1.234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "-1.234", kind = TokenKind.NUMERIC, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 6u,
                         loc = Location(
@@ -227,7 +233,7 @@ class LexerTest {
             ),
             arrayOf(
                 ".234", LexerResult.Success(
-                    token = Token(value = ".234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = ".234", kind = TokenKind.NUMERIC, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 4u,
                         loc = Location(
@@ -238,7 +244,7 @@ class LexerTest {
             ),
             arrayOf(
                 "-.234", LexerResult.Success(
-                    token = Token(value = "-.234", kind = TokenKind.NUMERIC, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "-.234", kind = TokenKind.NUMERIC, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 5u,
                         loc = Location(
@@ -263,7 +269,7 @@ class LexerTest {
         fun keywordsTestData() = listOf(
             arrayOf(
                 "select", LexerResult.Success(
-                    token = Token(value = "select", kind = TokenKind.KEYWORD, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "select", kind = TokenKind.KEYWORD, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 6u,
                         loc = Location(
@@ -274,7 +280,7 @@ class LexerTest {
             ),
             arrayOf(
                 "FROM", LexerResult.Success(
-                    token = Token(value = "from", kind = TokenKind.KEYWORD, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "from", kind = TokenKind.KEYWORD, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 4u,
                         loc = Location(
@@ -290,7 +296,7 @@ class LexerTest {
         fun stringLiteralsTestData() = listOf(
             arrayOf(
                 "'hello world'", LexerResult.Success(
-                    token = Token(value = "hello world", kind = TokenKind.STRING, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "hello world", kind = TokenKind.STRING, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 13u,
                         loc = Location(
@@ -305,7 +311,7 @@ class LexerTest {
         fun symbolsTestData() = listOf(
             arrayOf(
                 "(", LexerResult.Success(
-                    token = Token(value = "(", kind = TokenKind.SYMBOL, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "(", kind = TokenKind.SYMBOL, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 1u,
                         loc = Location(
@@ -316,7 +322,7 @@ class LexerTest {
             ),
             arrayOf(
                 ")", LexerResult.Success(
-                    token = Token(value = ")", kind = TokenKind.SYMBOL, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = ")", kind = TokenKind.SYMBOL, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 1u,
                         loc = Location(
@@ -327,7 +333,7 @@ class LexerTest {
             ),
             arrayOf(
                 "*", LexerResult.Success(
-                    token = Token(value = "*", kind = TokenKind.SYMBOL, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = "*", kind = TokenKind.SYMBOL, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 1u,
                         loc = Location(
@@ -338,7 +344,7 @@ class LexerTest {
             ),
             arrayOf(
                 ",", LexerResult.Success(
-                    token = Token(value = ",", kind = TokenKind.SYMBOL, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = ",", kind = TokenKind.SYMBOL, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 1u,
                         loc = Location(
@@ -349,7 +355,7 @@ class LexerTest {
             ),
             arrayOf(
                 ";", LexerResult.Success(
-                    token = Token(value = ";", kind = TokenKind.SYMBOL, loc = Location(col = 0u)),
+                    tokens = listOf(Token(value = ";", kind = TokenKind.SYMBOL, loc = Location(col = 0u))),
                     cursor = Cursor(
                         pointer = 1u,
                         loc = Location(
